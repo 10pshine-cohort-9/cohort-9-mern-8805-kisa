@@ -110,7 +110,7 @@ export default function Sidebar({
             width="18"
             height="15"
             alt=""
-          />
+          />{' '}
           All Notes
         </span>
 
@@ -223,6 +223,7 @@ export default function Sidebar({
               >
                 <input
                   type="text"
+                  aria-label="Category name"
                   placeholder="Category name"
                   value={name}
                   onChange={(e) =>

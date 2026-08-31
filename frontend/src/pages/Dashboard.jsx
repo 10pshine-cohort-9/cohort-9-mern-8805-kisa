@@ -88,18 +88,26 @@ export default function Dashboard() {
   }, []);
 
   const createCategory = async (name, icon) => {
-    await client.post('/api/categories', { name, icon });
-    fetchCategories();
+    try {
+      await client.post('/api/categories', { name, icon });
+      await fetchCategories();
+    } catch (err) {
+      throw err;
+    }
   };
 
   const deleteCategory = async (id) => {
     const deletedSlug = categories.find((c) => c.id === id)?.slug;
-    await client.delete(`/api/categories/${id}`);
-    await fetchCategories();
-    if (category && category === deletedSlug) {
-      setCategory(null);
-    } else if (view === 'notes') {
-      fetchNotes(search, category, undefined);
+    try {
+      await client.delete(`/api/categories/${id}`);
+      await fetchCategories();
+      if (category && category === deletedSlug) {
+        setCategory(null);
+      } else if (view === 'notes') {
+        fetchNotes(search, category, undefined);
+      }
+    } catch (err) {
+      setToast(err.response?.data?.message || 'Could not delete the category.');
     }
   };
 
@@ -247,6 +255,7 @@ export default function Dashboard() {
         </div>
         <div className="dash-user">
           <button
+            type="button"
             className="dash-user-name dash-user-name-btn"
             onClick={() => setProfileOpen(true)}
             title="View profile"
@@ -254,6 +263,7 @@ export default function Dashboard() {
             {user?.name || 'there'}
           </button>
           <button
+            type="button"
             className="btn btn-ghost theme-toggle"
             onClick={toggleTheme}
             aria-label="Toggle dark mode"
@@ -263,7 +273,7 @@ export default function Dashboard() {
               ? <img src="/icons/moon.png" className="pixel-icon" width="18" height="18" alt="" />
               : <img src="/icons/sun.png" className="pixel-icon" width="18" height="18" alt="" />}
           </button>
-          <button className="btn btn-ghost" onClick={handleLogout}>
+          <button type="button" className="btn btn-ghost" onClick={handleLogout}>
             Log out
           </button>
         </div>
@@ -271,7 +281,13 @@ export default function Dashboard() {
 
       <div className="dash-body">
         {sidebarOpen && (
-          <div className="dash-sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+          <button
+            type="button"
+            className="dash-sidebar-backdrop"
+            aria-label="Close sidebar"
+            style={{ border: 'none', font: 'inherit', cursor: 'default', appearance: 'none' }}
+            onClick={() => setSidebarOpen(false)}
+          />
         )}
 
         <Sidebar
@@ -310,7 +326,7 @@ export default function Dashboard() {
                   onImported={handleImportFinished}
                   onMessage={setToast}
                 />
-                <button className="btn btn-primary" onClick={openNewNote}>
+                <button type="button" className="btn btn-primary" onClick={openNewNote}>
                   + New Note
                 </button>
               </div>

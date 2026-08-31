@@ -7,6 +7,8 @@ const MAX_IMPORT_SIZE = 15 * 1024 * 1024;
 const SANITIZE_CONFIG = {
   ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 's', 'ul', 'ol', 'li', 'img', 'br'],
   ALLOWED_ATTR: ['src', 'alt', 'title'],
+  ALLOWED_URI_REGEXP: /^data:image\//i,
+
 };
 
 function downloadBlob(filename, content, type) {
@@ -23,11 +25,11 @@ function downloadBlob(filename, content, type) {
 
 function escapeHtml(value) {
   return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 function makeFilename(count) {
@@ -47,7 +49,7 @@ function buildHtmlExport(notes, categories) {
         ? `<div class="note-category">${escapeHtml(categoryName)}</div>`
         : '';
 
-      const content = note.content || '<p></p>';
+      const content = DOMPurify.sanitize(note.content || '<p></p>', SANITIZE_CONFIG);
 
       return `
         <article class="note">
@@ -510,13 +512,9 @@ export default function ImportExport({
       {exportOpen && (
         <div
           className="export-modal-backdrop"
-          onClick={closeExport}
         >
           <div
             className="export-modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
           >
             <div className="export-modal-header">
               <div>

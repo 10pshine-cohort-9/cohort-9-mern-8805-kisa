@@ -18,16 +18,25 @@ pool.on('error', (err) => {
 });
 
 async function ensureNoteTrashColumn(connection) {
-  const [rows] = await connection.query(
-    `SELECT COUNT(*) AS count
-     FROM INFORMATION_SCHEMA.COLUMNS
-     WHERE TABLE_SCHEMA = DATABASE()
-       AND TABLE_NAME = 'notes'
-       AND COLUMN_NAME = 'deleted_at'`
-  );
+  try {
+    const [rows] = await connection.query(
+      `SELECT COUNT(*) AS count
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = 'notes'
+         AND COLUMN_NAME = 'deleted_at'`
+    );
 
-  if (!rows[0].count) {
-    await connection.query('ALTER TABLE notes ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL');
+    if (!rows[0].count) {
+      try {
+        await connection.query('ALTER TABLE notes ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL');
+      } catch (err) {
+        if (err.code !== 'ER_DUP_FIELDNAME') throw err;
+      }
+    }
+  } catch (err) {
+    logger.error({ err }, 'failed to ensure notes.deleted_at column');
+    throw err;
   }
 }
 
